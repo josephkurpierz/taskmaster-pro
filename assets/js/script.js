@@ -127,6 +127,21 @@ $(".card .list-group").sortable({
   }
 });
 
+$("#trash").droppable({
+  accept: ".card .list-group-item",
+  tolerance: "touch",
+  drop: function(event, ui){
+    ui.draggable.remove();
+    console.log("drop");
+  },
+  over: function(event, ui){
+    console.log("over");
+  },
+  out:function(event, ui){
+    console.log("out");
+  }
+});
+
 $(".list-group").on("click","p",function(){
   //get current text of p element
   var text = $(this)
