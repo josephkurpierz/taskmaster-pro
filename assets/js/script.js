@@ -13,6 +13,8 @@ var createTask = function(taskText, taskDate, taskList) {
   // append span and p element to parent li
   taskLi.append(taskSpan, taskP);
 
+  //check duedate
+  auditTask(taskLi);
 
   // append to ul list on the page
   $("#list-" + taskList).append(taskLi);
@@ -142,6 +144,26 @@ $("#trash").droppable({
   }
 });
 
+$("#modalDueDate").datepicker({
+  minDate: 1
+});
+
+var auditTask = function(taskEl){
+  //get date from task element
+  var date =$(taskEl).find("span").text().trim();
+  //convert to monetn object as 5:00pm
+  var time = moment(date, "L").set("hour",17);
+  //remove old classes from element
+  $(taskEl).removeClass("list-group-item-warning list-group-item-danger");
+  //apply new class if task is near/overdue 
+  if (moment().isAfter(time)){
+    $(taskEl).addClass("list-group-item-danger");
+  }
+  else if(Math.abs(moment().diff(time, "days"))<=2){
+    $(taskEl).addClass("list-group-item-warning");
+  }
+};
+
 $(".list-group").on("click","p",function(){
   //get current text of p element
   var text = $(this)
@@ -187,9 +209,7 @@ $(".list-group").on("blur","textarea", function() {
 //due date was clicked
 $(".list-group").on("click","span", function(){
   //get current text
-  var date = $(this)
-    .text()
-    .trim();
+  var date = $(this).text().trim();
     
   //create new input element
   var dateInput = $("<input>")
@@ -198,12 +218,20 @@ $(".list-group").on("click","span", function(){
     .val(date);
   $(this).replaceWith(dateInput);
   
+  //enable jquery ui datepicker
+  dateInput.datepicker({
+    minDate:1,
+    onclose: function(){
+      //when calendar is closed, force a change event on the dateInput
+      $(this).trigger("change");
+    }
+  });
   //automatically focus on new element
   dateInput.trigger("focus");
 });
 
 //value of due date was changed
-$(".list-group").on("blur","input[type='text']", function(){
+$(".list-group").on("change","input[type='text']", function(){
   var date = $(this).val().trim();
   
   //get the parent ul's type and position in the list
@@ -224,6 +252,9 @@ $(".list-group").on("blur","input[type='text']", function(){
     .addClass("badge badge-primary badge-pill")
     .text(date);
   $(this).replaceWith(taskSpan);
+
+  //pass task's <li> elemetn into auditTask() to check new duedate
+  auditTask($(taskSpan).closest(".list-group-item"));
 });
 
 // remove all tasks
